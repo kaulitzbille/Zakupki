@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Госзакупки • Облачное рабочее место</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --warning-bg: #fffbeb;
+      --warning-border: #fde68a;
+      --success: #10b981;
+      --success-bg: #f0fdf4;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container { max-width: 1440px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      background: var(--surface);
+      padding: 18px 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo-area h1 { font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+    .sync-status { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+    .sync-ok { background: var(--success-bg); color: #059669; }
+    .sync-loading { background: #eff6ff; color: var(--primary); }
+    .sync-err { background: var(--danger-bg); color: var(--danger); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .calc-grid { display: grid; grid-template-columns: 420px 1fr; gap: 24px; }
+    @media (max-width: 900px) { .calc-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: #1e293b; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    .results-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .metric-box { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: #fafafa; }
+    .metric-box.highlight { background: #eff6ff; border-color: #bfdbfe; }
+    .metric-title { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+    .metric-val { font-size: 22px; font-weight: 700; color: #1e293b; }
+    .metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .alert-chip { padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-top: 12px; display: inline-block; }
+    .alert-safe { background: var(--success-bg); color: #047857; }
+    .alert-danger { background: var(--warning-bg); color: #b45309; }
+
+    .table-container {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
+    tr:hover td { background: #f8fafc; }
+
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+
+    .pay-status-paid { background: var(--success-bg); color: #047857; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+    .pay-status-wait { background: var(--danger-bg); color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+      display: none; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px);
+    }
+    .modal {
+      background: var(--surface); border-radius: var(--radius);
+      width: 680px; max-width: 95%; max-height: 90vh; overflow-y: auto; padding: 24px;
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-area">
+      <h1>Госзакупки & ЗМО <span id="syncIndicator" class="sync-status sync-loading">⏳ Загрузка...</span></h1>
+      <p>Прямая синхронизация с облачной Google Таблицей</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="loadFromGoogleSheets()">🔄 Обновить</button>
+      <button class="btn btn-secondary" onclick="downloadBackupOneClick()" title="Скачать всю базу в 1 клик">💾 Скачать бэкап (1 клик)</button>
+      <label class="btn btn-secondary" style="margin:0; cursor:pointer;" title="Восстановить базу из файла бэкапа">
+        📂 Восстановить <input type="file" id="backupInput" style="display:none" onchange="restoreBackup(event)">
+      </label>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('calc')">⚡ Быстрый калькулятор</button>
+    <button class="tab-btn" onclick="switchTab('registry')">📋 Реестр закупок (<span id="countBadge">0</span>)</button>
+    <button class="tab-btn" onclick="switchTab('dashboard')">📊 Сводка и Дашборд</button>
+  </div>
+
+  <!-- ВКЛАДКА 1: КАЛЬКУЛЯТОР -->
+  <div id="tab-calc" class="tab-content active">
+    <div class="calc-grid">
+      <div class="card">
+        <h2>Параметры закупки</h2>
+        <div class="form-group">
+          <label>НМЦК (₽)</label>
+          <input type="number" id="c_nmck" value="500000" oninput="runCalculator()">
+        </div>
+        <div class="form-group">
+          <label>Себестоимость товара/услуги (₽)</label>
+          <input type="number" id="c_cost" value="260000" oninput="runCalculator()">
+        </div>
+        <div class="form-group">
+          <label>Логистика и доставка (₽)</label>
+          <input type="number" id="c_shipping" value="15000" oninput="runCalculator()">
+        </div>
+        <div class="form-group">
+          <label>Погрузка / Прочие расходы (₽)</label>
+          <input type="number" id="c_other" value="5000" oninput="runCalculator()">
+        </div>
+        <div class="form-group">
+          <label>Желаемая чистая прибыль (₽)</label>
+          <input type="number" id="c_target_profit" value="60000" oninput="runCalculator()">
+        </div>
+        <button class="btn btn-primary" id="calcAddBtn" style="width: 100%;" onclick="addCurrentCalcToRegistry()">
+          + Сохранить в Google Таблицу
+        </button>
+      </div>
+
+      <div class="card">
+        <h2>Расчёт ставок и затрат с налогом</h2>
+        <div class="results-wrap">
+          <div class="metric-box">
+            <div class="metric-title">ТОЧКА БЕЗУБЫТОЧНОСТИ (0 ₽ прибыли)</div>
+            <div class="metric-val" id="r_breakeven_price">0 ₽</div>
+            <div class="metric-sub" id="r_breakeven_drop">Снижение: 0%</div>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--border);">
+            <div style="font-size: 13px; line-height: 1.7;">
+              <div>Прямые затраты: <b id="r_direct_expenses">0 ₽</b></div>
+              <div>Налог УСН: <b id="r_breakeven_tax">0 ₽</b></div>
+              <div style="color: #b91c1c;">Всего расходов с налогом: <b id="r_breakeven_total_exp">0 ₽</b></div>
+            </div>
+            <div id="r_breakeven_dump_badge" class="alert-chip alert-safe">✅ Норма</div>
+          </div>
+
+          <div class="metric-box highlight">
+            <div class="metric-title">РЕКОМЕНДУЕМАЯ СТАВКА (под прибыль)</div>
+            <div class="metric-val" style="color: var(--primary);" id="r_target_price">0 ₽</div>
+            <div class="metric-sub" id="r_target_drop">Снижение: 0%</div>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid #bfdbfe;">
+            <div style="font-size: 13px; line-height: 1.7;">
+              <div>Налог УСН: <b id="r_target_tax">0 ₽</b></div>
+              <div style="color: #1e40af;">Всего расходов с налогом: <b id="r_target_total_exp">0 ₽</b></div>
+              <div style="color: #15803d;">Чистая прибыль: <b id="r_target_net">0 ₽</b> (<span id="r_target_margin">0%</span>)</div>
+            </div>
+            <div id="r_target_dump_badge" class="alert-chip alert-safe">✅ Норма</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВКЛАДКА 2: РЕЕСТР -->
+  <div id="tab-registry" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <input type="text" id="tableSearch" placeholder="🔍 Поиск..." oninput="renderTable()" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; width: 220px;">
+        <select id="filterPlatform" onchange="renderTable()" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;">
+          <option value="">Все площадки</option>
+          <option value="ЕАТ «Берёзка»">ЕАТ «Берёзка»</option>
+          <option value="Прямой договор">Прямой договор</option>
+          <option value="ЗМО / Электронный магазин">ЗМО / Электронный магазин</option>
+          <option value="44-ФЗ">44-ФЗ</option>
+          <option value="223-ФЗ">223-ФЗ</option>
+        </select>
+        <select id="filterStatus" onchange="renderTable()" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;">
+          <option value="">Все статусы</option>
+          <option value="рассматриваю">рассматриваю</option>
+          <option value="готовлю заявку">готовлю заявку</option>
+          <option value="подал заявку">подал заявку</option>
+          <option value="выиграл">выиграл</option>
+          <option value="исполнена">исполнена</option>
+          <option value="проиграл">проиграл</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="exportToGoogleOfficial()">📊 Скачать Excel</button>
+        <button class="btn btn-secondary" onclick="exportToPDFClean()">📄 PDF-отчёт</button>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Добавить закупку</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>Площадка</th>
+            <th>Номер / Описание</th>
+            <th>НМЦК</th>
+            <th>Цена победы</th>
+            <th>Расходы без налога</th>
+            <th>Мин. цена (0 ₽)</th>
+            <th>Налог УСН</th>
+            <th>Всего с налогом</th>
+            <th>Чистая прибыль</th>
+            <th>Рентаб.</th>
+            <th>Антидемпинг</th>
+            <th>Исполнение</th>
+            <th>Оплата заказчиком</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="registryTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ВКЛАДКА 3: ДАШБОРД -->
+  <div id="tab-dashboard" class="tab-content">
+    <div class="summary-grid">
+      <div class="card">
+        <div class="metric-title">Всего процедур в таблице</div>
+        <div class="metric-val" id="d_total_count">0</div>
+        <div class="metric-sub" id="d_total_nmck">НМЦК: 0 ₽</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Конверсия побед (Win Rate)</div>
+        <div class="metric-val" style="color: var(--primary);" id="d_win_rate">0%</div>
+        <div class="metric-sub" id="d_win_sub">0 побед</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Чистая прибыль на руки (выиграно)</div>
+        <div class="metric-val" style="color: #15803d;" id="d_fact_profit">0 ₽</div>
+        <div class="metric-sub" id="d_fact_tax" style="color: #475569;">Учтённый налог УСН: 0 ₽ (уже вычтен)</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Зависшая оплата (дебиторка)</div>
+        <div class="metric-val" style="color: #b91c1c;" id="d_debt_sum">0 ₽</div>
+        <div class="metric-sub" id="d_debt_count">0 контрактов ждут оплаты</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="modalTitle">Новая закупка</h2>
+    <input type="hidden" id="m_edit_row">
+    <div class="modal-grid">
+      <div class="form-group">
+        <label>Тип закупки / Площадка</label>
+        <select id="m_platform">
+          <option value="ЕАТ «Берёзка»">ЕАТ «Берёзка»</option>
+          <option value="Прямой договор">Прямой договор</option>
+          <option value="ЗМО / Электронный магазин">ЗМО / Электронный магазин</option>
+          <option value="44-ФЗ">44-ФЗ</option>
+          <option value="223-ФЗ">223-ФЗ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Номер закупки</label>
+        <input type="text" id="m_num" placeholder="№ извещения">
+      </div>
+      <div class="form-group" style="grid-column: span 2;">
+        <label>Краткое описание товара/услуги</label>
+        <input type="text" id="m_desc" placeholder="Поставка материалов...">
+      </div>
+      <div class="form-group">
+        <label>НМЦК, ₽</label>
+        <input type="number" id="m_nmck" value="0">
+      </div>
+      <div class="form-group">
+        <label>Цена победы / предложения, ₽</label>
+        <input type="number" id="m_win_price" value="0">
+      </div>
+      <div class="form-group">
+        <label>Себестоимость, ₽</label>
+        <input type="number" id="m_cost" value="0">
+      </div>
+      <div class="form-group">
+        <label>Логистика и доставка, ₽</label>
+        <input type="number" id="m_shipping" value="0">
+      </div>
+      <div class="form-group">
+        <label>Погрузка / Прочие расходы, ₽</label>
+        <input type="number" id="m_other" value="0">
+      </div>
+      <div class="form-group">
+        <label>Статус</label>
+        <select id="m_status">
+          <option value="рассматриваю">рассматриваю</option>
+          <option value="готовлю заявку">готовлю заявку</option>
+          <option value="подал заявку">подал заявку</option>
+          <option value="выиграл">выиграл</option>
+          <option value="проиграл">проиграл</option>
+          <option value="исполнена">исполнена</option>
+          <option value="отказался">отказался</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Дата фактического исполнения</label>
+        <input type="date" id="m_date_exec">
+      </div>
+      <div class="form-group">
+        <label>Дата поступления оплаты</label>
+        <input type="date" id="m_date_pay">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveModalItem()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbzOFi_0dB85GY2wz44Wntq5VN0SI1FbliTR8Zp5CIZ9ee3j-vxXaK6bfqDywVyrRAwnHA/exec";
+  const SPREADSHEET_ID = "1RY8c18uhlF4_wON2iy3M0Sz2b95AnsMrc_MQAjzVDTw";
+
+  let items = JSON.parse(localStorage.getItem('goszakupki_cache') || "[]");
+  let taxRate = 0.07;
+
+  function fmt(num) {
+    return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(num || 0) + ' ₽';
+  }
+
+  function fmtPct(num) {
+    return ((num || 0) * 100).toFixed(2) + '%';
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'dashboard') renderDashboard();
+  }
+
+  function applyLoadedData(json) {
+    const indicator = document.getElementById('syncIndicator');
+    items = json.items || [];
+    taxRate = json.taxRate || 0.07;
+    localStorage.setItem('goszakupki_cache', JSON.stringify(items));
+    indicator.className = 'sync-status sync-ok';
+    indicator.innerText = '✅ Синхронизировано';
+    renderTable();
+    renderDashboard();
+  }
+
+  // ЗАГРУЗКА ИЗ GOOGLE ТАБЛИЦЫ
+  async function loadFromGoogleSheets() {
+    const indicator = document.getElementById('syncIndicator');
+    indicator.className = 'sync-status sync-loading';
+    indicator.innerText = '⏳ Загрузка...';
+
+    // 1. Попытка через fetch
+    try {
+      const response = await fetch(API_URL, {
+        method: "GET",
+        redirect: "follow"
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json && json.status === "success") {
+          applyLoadedData(json);
+          return;
+        }
+      }
+    } catch (err) {
+      // Игнорируем и переходим к JSONP
+    }
+
+    // 2. Резервный вызов через JSONP
+    const cbName = 'gSheetDataCallback_' + Date.now();
+    let isHandled = false;
+
+    const timer = setTimeout(() => {
+      if (!isHandled) {
+        isHandled = true;
+        delete window[cbName];
+        if (items.length > 0) {
+          indicator.className = 'sync-status sync-ok';
+          indicator.innerText = '✅ Из кэша (' + items.length + ')';
+        } else {
+          indicator.className = 'sync-status sync-err';
+          indicator.innerText = '⚠️ Автономный режим';
+        }
+        renderTable();
+        renderDashboard();
+      }
+    }, 6000);
+
+    window[cbName] = function(json) {
+      if (isHandled) return;
+      isHandled = true;
+      clearTimeout(timer);
+      delete window[cbName];
+      if (json && json.status === "success") {
+        applyLoadedData(json);
+      }
+    };
+
+    const script = document.createElement('script');
+    script.src = API_URL + '?callback=' + cbName + '&t=' + Date.now();
+    script.onerror = function() {
+      if (isHandled) return;
+      isHandled = true;
+      clearTimeout(timer);
+      delete window[cbName];
+      indicator.className = 'sync-status sync-err';
+      indicator.innerText = '⚠️ Автономный режим';
+      renderTable();
+      renderDashboard();
+    };
+
+    document.body.appendChild(script);
+  }
+
+  // ОТПРАВКА ДАННЫХ
+  async function sendToSheet(action, data) {
+    let queryParams = `action=${encodeURIComponent(action)}`;
+    for (let key in data) {
+      if (data[key] !== undefined && data[key] !== null) {
+        queryParams += `&${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`;
+      }
+    }
+
+    try {
+      await fetch(API_URL + '?' + queryParams, {
+        method: "GET",
+        mode: "no-cors"
+      });
+    } catch (e) {
+      const img = new Image();
+      img.src = API_URL + '?' + queryParams + '&t=' + Date.now();
+    }
+  }
+
+  function runCalculator() {
+    const nmck = parseFloat(document.getElementById('c_nmck').value) || 0;
+    const cost = parseFloat(document.getElementById('c_cost').value) || 0;
+    const shipping = parseFloat(document.getElementById('c_shipping').value) || 0;
+    const other = parseFloat(document.getElementById('c_other').value) || 0;
+    const targetProfit = parseFloat(document.getElementById('c_target_profit').value) || 0;
+
+    const directExp = cost + shipping + other;
+    document.getElementById('r_direct_expenses').innerText = fmt(directExp);
+
+    const breakPrice = directExp > 0 ? (directExp / (1 - taxRate)) : 0;
+    const breakTax = breakPrice * taxRate;
+    const breakTotalExp = directExp + breakTax;
+    const breakDrop = nmck > 0 ? (nmck - breakPrice) : 0;
+    const breakDropPct = nmck > 0 ? (breakDrop / nmck) : 0;
+
+    document.getElementById('r_breakeven_price').innerText = fmt(breakPrice);
+    document.getElementById('r_breakeven_tax').innerText = fmt(breakTax);
+    document.getElementById('r_breakeven_total_exp').innerText = fmt(breakTotalExp);
+    document.getElementById('r_breakeven_drop').innerText = `Снижение: ${fmtPct(breakDropPct)} (${fmt(breakDrop)})`;
+
+    const breakBadge = document.getElementById('r_breakeven_dump_badge');
+    if (breakDropPct >= 0.25) {
+      breakBadge.className = 'alert-chip alert-danger';
+      breakBadge.innerText = '⚠️ Снижение ≥ 25% (Антидемпинг)';
+    } else {
+      breakBadge.className = 'alert-chip alert-safe';
+      breakBadge.innerText = '✅ Снижение в норме (<25%)';
+    }
+
+    const targetPrice = directExp > 0 ? ((directExp + targetProfit) / (1 - taxRate)) : 0;
+    const targetTax = targetPrice * taxRate;
+    const targetTotalExp = directExp + targetTax;
+    const targetNet = targetPrice - targetTotalExp;
+    const targetMargin = targetPrice > 0 ? (targetNet / targetPrice) : 0;
+    const targetDrop = nmck > 0 ? (nmck - targetPrice) : 0;
+    const targetDropPct = nmck > 0 ? (targetDrop / nmck) : 0;
+
+    document.getElementById('r_target_price').innerText = fmt(targetPrice);
+    document.getElementById('r_target_tax').innerText = fmt(targetTax);
+    document.getElementById('r_target_total_exp').innerText = fmt(targetTotalExp);
+    document.getElementById('r_target_net').innerText = fmt(targetNet);
+    document.getElementById('r_target_margin').innerText = fmtPct(targetMargin);
+    document.getElementById('r_target_drop').innerText = `Снижение: ${fmtPct(targetDropPct)} (${fmt(targetDrop)})`;
+  }
+
+  async function addCurrentCalcToRegistry() {
+    const btn = document.getElementById('calcAddBtn');
+    btn.innerText = '⏳ Сохраняем...';
+    btn.disabled = true;
+
+    const nmck = parseFloat(document.getElementById('c_nmck').value) || 0;
+    const cost = parseFloat(document.getElementById('c_cost').value) || 0;
+    const shipping = parseFloat(document.getElementById('c_shipping').value) || 0;
+    const other = parseFloat(document.getElementById('c_other').value) || 0;
+    const targetProfit = parseFloat(document.getElementById('c_target_profit').value) || 0;
+    const directExp = cost + shipping + other;
+    const targetPrice = Math.round(directExp > 0 ? ((directExp + targetProfit) / (1 - taxRate)) : 0);
+
+    const payload = {
+      platform: "ЕАТ «Берёзка»",
+      number: "Закупка-" + (items.length + 1),
+      desc: "Экспресс-расчёт от " + new Date().toLocaleDateString('ru-RU'),
+      nmck: nmck,
+      win_price: targetPrice,
+      cost: cost,
+      shipping: shipping,
+      other: other,
+      status: "рассматриваю",
+      date_exec: "",
+      date_pay: ""
+    };
+
+    await sendToSheet("add", payload);
+    btn.innerText = '+ Сохранить в Google Таблицу';
+    btn.disabled = false;
+    switchTab('registry');
+    setTimeout(loadFromGoogleSheets, 800);
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('registryTableBody');
+    const search = document.getElementById('tableSearch').value.toLowerCase();
+    const platFilter = document.getElementById('filterPlatform').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    tbody.innerHTML = '';
+
+    const filtered = items.filter(it => {
+      const matchSearch = (it.number || '').toLowerCase().includes(search) || (it.desc || '').toLowerCase().includes(search);
+      const matchPlat = !platFilter || it.platform === platFilter;
+      const matchStatus = !statusFilter || it.status === statusFilter;
+      return matchSearch && matchPlat && matchStatus;
+    });
+
+    document.getElementById('countBadge').innerText = items.length;
+
+    filtered.forEach((it, idx) => {
+      const directExp = (it.cost || 0) + (it.shipping || 0) + (it.other || 0);
+      const breakPrice = directExp > 0 ? (directExp / (1 - taxRate)) : 0;
+      const tax = (it.win_price || 0) * taxRate;
+      const totalExpWithTax = directExp + tax;
+      const netProfit = (it.win_price || 0) - totalExpWithTax;
+      const margin = it.win_price > 0 ? (netProfit / it.win_price) : 0;
+      const dropPct = it.nmck > 0 ? ((it.nmck - it.win_price) / it.nmck) : 0;
+
+      let payCell = '<span style="color:#94a3b8;">—</span>';
+      if (it.date_exec) {
+        if (it.date_pay) {
+          const diffDays = Math.round((new Date(it.date_pay) - new Date(it.date_exec)) / (1000 * 3600 * 24));
+          payCell = `<span class="pay-status-paid">Оплачено (${diffDays} дн.)</span>`;
+        } else {
+          const waitDays = Math.round((new Date() - new Date(it.date_exec)) / (1000 * 3600 * 24));
+          payCell = `<span class="pay-status-wait">Ожидание (${waitDays} дн.)</span>`;
+        }
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${idx + 1}</b></td>
+        <td><span class="badge badge-gray">${it.platform}</span></td>
+        <td>
+          <div style="font-weight: 600;">${it.number || 'Без номера'}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${it.desc || '—'}</div>
+        </td>
+        <td>${fmt(it.nmck)}</td>
+        <td><b style="color:var(--primary);">${fmt(it.win_price)}</b></td>
+        <td>${fmt(directExp)}</td>
+        <td style="color:#475569;">${fmt(breakPrice)}</td>
+        <td>${fmt(tax)}</td>
+        <td style="color:#b91c1c; font-weight:600;">${fmt(totalExpWithTax)}</td>
+        <td style="font-weight:700; color:${netProfit > 0 ? '#15803d' : '#b91c1c'};">${fmt(netProfit)}</td>
+        <td>${fmtPct(margin)}</td>
+        <td>${dropPct >= 0.25 ? '<span class="badge badge-red">⚠️ ≥25%</span>' : '<span class="badge badge-green">Норма</span>'}</td>
+        <td>${it.date_exec || '—'}</td>
+        <td>${payCell}</td>
+        <td><span class="badge badge-blue">${it.status}</span></td>
+        <td>
+          <button style="border:none; background:none; cursor:pointer;" onclick="editItem(${it.rowNum})" title="Редактировать">✏️</button>
+          <button style="border:none; background:none; cursor:pointer;" onclick="deleteItem(${it.rowNum})" title="Удалить">🗑</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openAddModal() {
+    document.getElementById('modalTitle').innerText = 'Новая закупка';
+    document.getElementById('m_edit_row').value = '';
+    document.getElementById('m_num').value = '';
+    document.getElementById('m_desc').value = '';
+    document.getElementById('m_nmck').value = 0;
+    document.getElementById('m_win_price').value = 0;
+    document.getElementById('m_cost').value = 0;
+    document.getElementById('m_shipping').value = 0;
+    document.getElementById('m_other').value = 0;
+    document.getElementById('m_status').value = 'рассматриваю';
+    document.getElementById('m_date_exec').value = '';
+    document.getElementById('m_date_pay').value = '';
+    document.getElementById('itemModal').style.display = 'flex';
+  }
+
+  function editItem(rowNum) {
+    const it = items.find(x => x.rowNum === rowNum);
+    if (!it) return;
+    document.getElementById('modalTitle').innerText = 'Редактировать закупку';
+    document.getElementById('m_edit_row').value = it.rowNum;
+    document.getElementById('m_platform').value = it.platform;
+    document.getElementById('m_num').value = it.number;
+    document.getElementById('m_desc').value = it.desc;
+    document.getElementById('m_nmck').value = it.nmck;
+    document.getElementById('m_win_price').value = it.win_price;
+    document.getElementById('m_cost').value = it.cost;
+    document.getElementById('m_shipping').value = it.shipping;
+    document.getElementById('m_other').value = it.other;
+    document.getElementById('m_status').value = it.status;
+    document.getElementById('m_date_exec').value = it.date_exec || '';
+    document.getElementById('m_date_pay').value = it.date_pay || '';
+    document.getElementById('itemModal').style.display = 'flex';
+  }
+
+  function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
+
+  async function saveModalItem() {
+    const editRow = document.getElementById('m_edit_row').value;
+    const btn = document.getElementById('saveBtn');
+    btn.innerText = 'Сохранение...';
+    btn.disabled = true;
+
+    const payload = {
+      rowNum: editRow ? parseInt(editRow) : null,
+      platform: document.getElementById('m_platform').value,
+      number: document.getElementById('m_num').value,
+      desc: document.getElementById('m_desc').value,
+      nmck: parseFloat(document.getElementById('m_nmck').value) || 0,
+      win_price: parseFloat(document.getElementById('m_win_price').value) || 0,
+      cost: parseFloat(document.getElementById('m_cost').value) || 0,
+      shipping: parseFloat(document.getElementById('m_shipping').value) || 0,
+      other: parseFloat(document.getElementById('m_other').value) || 0,
+      status: document.getElementById('m_status').value,
+      date_exec: document.getElementById('m_date_exec').value,
+      date_pay: document.getElementById('m_date_pay').value
+    };
+
+    if (editRow) {
+      await sendToSheet("update", payload);
+    } else {
+      await sendToSheet("add", payload);
+    }
+
+    btn.innerText = 'Сохранить';
+    btn.disabled = false;
+    closeModal();
+    setTimeout(loadFromGoogleSheets, 800);
+  }
+
+  async function deleteItem(rowNum) {
+    if (confirm('Удалить эту строку из Google Таблицы?')) {
+      await sendToSheet("delete", { rowNum: rowNum });
+      setTimeout(loadFromGoogleSheets, 800);
+    }
+  }
+
+  function downloadBackupOneClick() {
+    if (!items || items.length === 0) {
+      alert('База пуста или ещё загружается.');
+      return;
+    }
+    const backupData = {
+      createdAt: new Date().toISOString(),
+      source: "Google Таблица (Госзакупки)",
+      taxRate: taxRate,
+      count: items.length,
+      items: items
+    };
+
+    const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const a = document.createElement('a');
+    a.href = str;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `backup_goszakupki_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  async function restoreBackup(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        const dataToRestore = Array.isArray(parsed) ? parsed : (parsed.items || []);
+        if (dataToRestore.length === 0) {
+          alert('В файле нет данных.');
+          return;
+        }
+        if (confirm(`Найдено ${dataToRestore.length} закупок. Добавить их в Google Таблицу?`)) {
+          for (let it of dataToRestore) {
+            await sendToSheet("add", it);
+          }
+          alert('Загружено! Обновляем...');
+          setTimeout(loadFromGoogleSheets, 1200);
+        }
+      } catch (err) {
+        alert('Ошибка при чтении файла резервной копии.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function renderDashboard() {
+    document.getElementById('d_total_count').innerText = items.length;
+    const totalNmck = items.reduce((acc, it) => acc + (it.nmck || 0), 0);
+    document.getElementById('d_total_nmck').innerText = 'НМЦК: ' + fmt(totalNmck);
+
+    const submitted = items.filter(i => ['подал заявку', 'выиграл', 'исполнена', 'проиграл'].includes(i.status)).length;
+    const won = items.filter(i => ['выиграл', 'исполнена'].includes(i.status)).length;
+    const winRate = submitted > 0 ? (won / submitted) : 0;
+    document.getElementById('d_win_rate').innerText = fmtPct(winRate);
+    document.getElementById('d_win_sub').innerText = `${won} побед из ${submitted} поданных заявок`;
+
+    let factProfit = 0;
+    let factTax = 0;
+    items.filter(i => ['выиграл', 'исполнена'].includes(i.status)).forEach(it => {
+      const exp = (it.cost || 0) + (it.shipping || 0) + (it.other || 0);
+      const tax = (it.win_price || 0) * taxRate;
+      factProfit += (it.win_price || 0) - exp - tax;
+      factTax += tax;
+    });
+
+    document.getElementById('d_fact_profit').innerText = fmt(factProfit);
+    document.getElementById('d_fact_tax').innerText = 'Учтённый налог УСН: ' + fmt(factTax) + ' (уже вычтен)';
+
+    let debtSum = 0;
+    let debtCount = 0;
+    items.forEach(it => {
+      if (it.date_exec && !it.date_pay) {
+        debtSum += (it.win_price || 0);
+        debtCount++;
+      }
+    });
+    document.getElementById('d_debt_sum').innerText = fmt(debtSum);
+    document.getElementById('d_debt_count').innerText = `${debtCount} контрактов ждут перечисления`;
+  }
+
+  // СКАЧАТЬ ОРИГИНАЛЬНЫЙ EXCEL НАПРЯМУЮ С GOOGLE ТАБЛИЦЫ
+  function exportToGoogleOfficial() {
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=xlsx`;
+    window.open(url, '_blank');
+  }
+
+  // ПЕЧАТЬ И ЭКСПОРТ В PDF С КОРРЕКТНЫМ РУССКИМ ТЕКСТОМ
+  function exportToPDFClean() {
+    const printWindow = window.open('', '_blank');
+    const tableRows = items.map((it, idx) => {
+      const exp = (it.cost || 0) + (it.shipping || 0) + (it.other || 0);
+      const tax = (it.win_price || 0) * taxRate;
+      const profit = (it.win_price || 0) - exp - tax;
+      const margin = it.win_price > 0 ? (profit / it.win_price * 100).toFixed(1) + '%' : '0%';
+      const pay = it.date_pay ? 'Оплачено' : (it.date_exec ? 'Ждёт оплаты' : '—');
+
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${it.platform || '—'}</td>
+          <td><b>${it.number || '—'}</b><br><small style="color:#64748b;">${it.desc || ''}</small></td>
+          <td style="text-align:right;">${fmt(it.nmck)}</td>
+          <td style="text-align:right;"><b>${fmt(it.win_price)}</b></td>
+          <td style="text-align:right;">${fmt(exp)}</td>
+          <td style="text-align:right;">${fmt(tax)}</td>
+          <td style="text-align:right; font-weight:bold; color:${profit >= 0 ? '#15803d' : '#b91c1c'};">${fmt(profit)}</td>
+          <td style="text-align:center;">${margin}</td>
+          <td style="text-align:center;">${it.status}</td>
+          <td style="text-align:center;">${pay}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="ru">
+      <head>
+        <meta charset="UTF-8">
+        <title>Реестр государственных закупок</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Roboto', sans-serif; padding: 20px; color: #0f172a; }
+          h2 { margin-bottom: 4px; }
+          .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          th { background: #2563eb; color: #fff; text-align: left; padding: 8px 10px; font-weight: 500; }
+          td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+          tr:nth-child(even) td { background: #f8fafc; }
+          @media print {
+            body { padding: 0; }
+            @page { size: landscape; margin: 10mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <h2>Реестр государственных закупок и ЗМО</h2>
+        <div class="sub">Сформировано: ${new Date().toLocaleDateString('ru-RU')} | Ставка УСН: ${(taxRate * 100).toFixed(1)}% | Всего закупок: ${items.length}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Площадка</th>
+              <th>Номер / Описание</th>
+              <th style="text-align:right;">НМЦК</th>
+              <th style="text-align:right;">Цена победы</th>
+              <th style="text-align:right;">Расходы</th>
+              <th style="text-align:right;">Налог УСН</th>
+              <th style="text-align:right;">Прибыль чистыми</th>
+              <th style="text-align:center;">Рентаб.</th>
+              <th style="text-align:center;">Статус</th>
+              <th style="text-align:center;">Оплата</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  }
+
+  runCalculator();
+  loadFromGoogleSheets();
+</script>
+</body>
+</html>
